@@ -1,5 +1,8 @@
+# Vivado outputs
 .jou
 .log
 .Xil/
-.dcp
-.bit
+
+# Build artifacts
+build/
+clockInfo.txt
