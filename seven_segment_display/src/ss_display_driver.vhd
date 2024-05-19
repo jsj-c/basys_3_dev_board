@@ -7,7 +7,9 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity seven_seg_driver is
     Generic (
-        NUM_DIGITS_G : natural := 4
+        NUM_DIGITS_G             : natural := 4;
+        REFRESH_MILLISECONDS_G   : natural := 16;
+        CLK_PERIOD_NANOSECONDS_G : natural := 10
     );
     Port (
         -- Control
@@ -38,9 +40,8 @@ constant digit_lut : digit_lut_t :=
    9 => ("0010000")
   );
 
-constant REFRESH_MILLISECONDS_C    : natural := 4;
-constant CLK_PERIOD_NANOSECONDS_C  : natural := 10;
-constant REFRESH_CLKS_C            : natural := REFRESH_MILLISECONDS_C * 1000000 / CLK_PERIOD_NANOSECONDS_C;
+constant PER_DISPLAY_REFRESH_MILLISECONDS_C : natural := REFRESH_MILLISECONDS_G / NUM_DIGITS_G;
+constant REFRESH_CLKS_C                     : natural := PER_DISPLAY_REFRESH_MILLISECONDS_C * 1000000 / CLK_PERIOD_NANOSECONDS_G;
 
 constant COUNTER_WIDTH_C           : natural := integer(ceil(log2(real(REFRESH_CLKS_C))));
 constant DISPLAY_SELECTOR_WIDTH_C  : natural := integer(ceil(log2(real(NUM_DIGITS_G))));
@@ -81,6 +82,3 @@ begin
         end if;
     end process;
 end rtl;
-
-
-

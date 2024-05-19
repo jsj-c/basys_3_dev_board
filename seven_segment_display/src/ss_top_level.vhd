@@ -29,7 +29,9 @@ begin
 
     four_way_seven_seg_driver_inst : entity work.seven_seg_driver
     generic map (
-        NUM_DIGITS_G => NUM_DIGITS_C
+        NUM_DIGITS_G             => NUM_DIGITS_C,
+        REFRESH_MILLISECONDS_G   => 16,
+        CLK_PERIOD_NANOSECONDS_G => 10
     )
     port map (
         clk      => clk,
