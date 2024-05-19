@@ -11,3 +11,4 @@ flash:
 clean:
 	rm -rf build/
 	rm -rf .Xil/
+	rm -f clockInfo.txt
