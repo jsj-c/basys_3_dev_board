@@ -28,17 +28,26 @@ CONSTANT V_LIMIT    : natural := 525;
 CONSTANT V_RES      : natural := 480;
 CONSTANT V_T_BORDER : natural := 35;
 
+signal reset : std_logic;
 
 signal pixel_clk        : std_logic;
 signal pixel_clk_locked : std_logic;
 signal pixel_clk_fb : std_logic;
 
+signal twenty_five_hz_counter : unsigned(31 downto 0);
+
 signal h_counter : unsigned(9 downto 0);
 signal v_counter : unsigned(9 downto 0);
 
+signal x_pos : unsigned(10 downto 0);
+signal y_pos : unsigned(10 downto 0);
+
+signal x_inc : signed(1 downto 0);
+signal y_inc : signed(1 downto 0);
+
 begin
 
-    -- PLLE2_BASE: Base Phase Locked Loop (PLL)
+-- PLLE2_BASE: Base Phase Locked Loop (PLL)
 --             7 Series
 -- Xilinx HDL Language Template, version 2024.1
 
@@ -79,6 +88,8 @@ port map (
 
 -- End of PLLE2_BASE_inst instantiation
 
+reset <= not pixel_clk_locked;
+
 h_v_counters_proc : process(pixel_clk) is
 begin
     if rising_edge(pixel_clk) then
@@ -91,6 +102,11 @@ begin
             if v_counter = V_LIMIT - 1 then
                 v_counter <= (others => '0');
             end if;
+        end if;
+
+        if reset = '1' then
+            h_counter <= (others => '0');
+            v_counter <= (others => '0');
         end if;
     end if;
 end process;
@@ -111,16 +127,72 @@ begin
         if v_counter = 1 then
             Vsync <= '0';
         end if;
+
+        if reset = '1' then
+            Hsync <= '0';
+            Vsync <= '0';
+        end if;
+    end if;
+end process;
+
+timer_proc : process(pixel_clk) is
+begin
+    if rising_edge(pixel_clk) then
+        twenty_five_hz_counter <= twenty_five_hz_counter + 1;
+
+        if twenty_five_hz_counter = 1000000 then
+            twenty_five_hz_counter <= (others => '0');
+        end if;
+
+        if reset = '1' then
+            twenty_five_hz_counter <= (others => '0');
+        end if;
+    end if;
+end process;
+
+xy_proc : process(pixel_clk) is
+begin
+    if rising_edge(pixel_clk) then
+
+        if twenty_five_hz_counter = 0 then
+            x_pos <= unsigned(signed(x_pos) + x_inc);
+            y_pos <= unsigned(signed(y_pos) + y_inc);
+        end if;
+
+        if (x_pos = 0) or (x_pos = H_RES - 1) then
+            x_inc <= -x_inc;
+            x_pos <= unsigned(signed(x_pos) + x_inc * 2);
+        end if;
+
+        if (y_pos = 0) or (y_pos = V_RES - 1) then
+            y_inc <= -y_inc;
+            y_pos <= unsigned(signed(y_pos) + y_inc * 2);
+            end if;
+
+
+        if reset = '1' then
+            x_pos <= to_unsigned(H_RES / 2, x_pos'length);
+            y_pos <= to_unsigned(V_RES / 2, y_pos'length);
+            x_inc <= to_signed(1, x_inc'length);
+            y_inc <= to_signed(1, y_inc'length);
+        end if;
+
     end if;
 end process;
 
 rgb_proc : process(pixel_clk) is
 begin
     if rising_edge(pixel_clk) then
-        if (h_counter = H_RES / 2 + H_L_BORDER) or (v_counter = V_RES / 2 + V_T_BORDER) then
+        if (h_counter = x_pos + H_L_BORDER) or (v_counter = y_pos + V_T_BORDER) then
             vgaBlue <= "1111";
         else
             vgaBlue <= "0000";
+        end if;
+
+        if reset = '1' then
+            vgaRed   <= (others => '0');
+            vgaBlue  <= (others => '0');
+            vgaGreen <= (others => '0');
         end if;
     end if;
 end process;
