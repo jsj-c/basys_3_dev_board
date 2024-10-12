@@ -10,6 +10,10 @@ The seven_segment_display subdirectory contains a driver for the display which t
 
 The top level file currently implements some simple logic which counts up every second and sends the digits of the current number to the display driver. In theory, with the driver being generic, any sort of number-based logic could be implemented and its output displayed using the driver.
 
+### VGA Driver
+
+The vga_driver subdirectory contains a driver which will generate a 640x480 VGA signal which draws two horizontal and vertical lines on a VGA display. These lines bounce around the screen and their colour is determined by the 12 right-most switches with the switches representing 4 bits of RED, 4 bits of GREEN and 4 bits of BLUE (from left to right).
+
 ## Building
 
 All projects are built using Vivado tcl files which are wrapped in make files.
